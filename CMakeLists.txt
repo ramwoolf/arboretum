@@ -4,6 +4,9 @@ cmake_minimum_required(VERSION 3.0)
 set(PROJECT Arboretum)
 project(${PROJECT})
 
+add_definitions(-DMAJOR_VERSION_NUMBER=0)
+add_definitions(-DMINOR_VERSION_NUMBER=1)
+
 message("System:        ${CMAKE_SYSTEM_NAME}")
 message("C compiller:   ${CMAKE_C_COMPILER}")
 message("CXX compiller: ${CMAKE_CXX_COMPILER}")
