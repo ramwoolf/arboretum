@@ -9,9 +9,11 @@
 
 #include <iostream>
 
+#include "binary_tree.hpp"
+
 int main(int argc, char const *argv[])
 {
-    std::cout << "Version" << std::endl;
-    std::cout << MAJOR_VERSION_NUMBER << "." << MINOR_VERSION_NUMBER << std::endl;
+    TreesLib::BinaryTree<int> my_tree{4, 6, 34, 18, 41, 8};
+    my_tree.preorder_tree_walk();
     return 0;
 }
