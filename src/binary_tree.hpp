@@ -22,10 +22,13 @@ namespace TreesLib
         TreeNodePtr<T> left;
         TreeNodePtr<T> right;
 
+        BinaryTreeNode<T>* parent;
+
         BinaryTreeNode(T&& k) 
         : key(std::move(k))
         , left(nullptr)
         , right(nullptr)
+        , parent(nullptr)
         {}
 
         ~BinaryTreeNode()
@@ -61,14 +64,17 @@ namespace TreesLib
                     if (y == nullptr)
                     {
                         root = std::make_unique<BinaryTreeNode<T>>(std::move(tmp));
+                        root->parent = nullptr;
                     }
                     else if (tmp < y->key)
                     {
                         y->left = std::make_unique<BinaryTreeNode<T>>(std::move(tmp));
+                        y->left->parent = y;
                     }
                     else
                     {
                         y->right = std::make_unique<BinaryTreeNode<T>>(std::move(tmp));
+                        y->right->parent = y;
                     }
                 }
             }
@@ -97,17 +103,38 @@ namespace TreesLib
             if (y == nullptr)
             {
                 root = std::make_unique<BinaryTreeNode<T>>(std::move(new_key));
+                root->parent = nullptr;
             }
             else if (new_key < y->key)
             {
                 y->left = std::make_unique<BinaryTreeNode<T>>(std::move(new_key));
-                // y->left->parent = y;
+                y->left->parent = y;
             }
             else
             {
                 y->right = std::make_unique<BinaryTreeNode<T>>(std::move(new_key));
-                // y->right->parent = y;
+                y->right->parent = y;
             }
+        }
+
+        T minimum() const
+        {
+            return tree_minimum(root.get());
+        }
+
+        T maximum() const
+        {
+            return tree_maximum(root.get());
+        }
+
+        T successor() const
+        {
+            return tree_successor(root.get());
+        }
+
+        T predecessor() const
+        {
+            return tree_predecessor(root.get());
         }
 
         void preorder_tree_walk() const
@@ -156,6 +183,68 @@ namespace TreesLib
                 }
             }
             return result->key;
+        }
+
+        void remove_from_tree(T&& key)
+        {
+            auto found_key = tree_search(std::move(key));
+            std::cout << found_key << std::endl;
+            // if (found_key == nullptr)
+            // {
+            //     std::cout << "Not found" << std::endl
+            // }
+            return;
+        }
+
+    private:
+        T tree_minimum(BinaryTreeNode<T>* subroot) const
+        {
+            while (subroot->left != nullptr)
+            {
+                subroot = subroot->left.get();
+            }
+            return subroot->key;
+        }
+
+        T tree_maximum(BinaryTreeNode<T>* subroot) const
+        {
+            while (subroot->right != nullptr)
+            {
+                subroot = subroot->right.get();
+            }
+            return subroot->key;
+        }
+
+        T tree_successor(BinaryTreeNode<T>* subroot) const
+        {
+            if (subroot->right != nullptr)
+            {
+                return tree_minimum(subroot->right.get());
+            }
+            std::cout << "---" << std::endl;
+            auto it = subroot->parent;
+            while (it != nullptr && subroot == it->right.get())
+            {
+                subroot = it;
+                it = it->parent;
+            }
+            return it->key;
+        }
+
+        T tree_predecessor(BinaryTreeNode<T>* subroot) const
+        {
+            if (subroot->left != nullptr)
+            {
+                return tree_maximum(subroot->left.get());
+            }
+            std::cout << "---" << std::endl;
+            auto it = subroot->parent;
+            while (it != nullptr && subroot == it->left.get())
+            {
+                subroot = it;
+                it = it->parent;
+            }
+            return it->key;
         }
     };
 }
