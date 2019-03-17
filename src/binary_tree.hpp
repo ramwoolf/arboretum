@@ -8,7 +8,7 @@
 #include <initializer_list>
 #include <exception>
 
-namespace TreesLib
+namespace Arboretum
 {
     template <typename T> struct BinaryTreeNode;
 
@@ -127,14 +127,23 @@ namespace TreesLib
             return tree_maximum(root.get());
         }
 
-        T successor() const
+        T successor(T&& key) const
         {
-            return tree_successor(root.get());
+            auto subroot = search(std::move(key));
+            if (subroot)
+                return tree_successor(subroot);
+            else
+                throw std::logic_error("Key error");
+            
         }
 
-        T predecessor() const
+        T predecessor(T&& key) const
         {
-            return tree_predecessor(root.get());
+            auto subroot = search(std::move(key));
+            if (subroot)
+                return tree_predecessor(subroot);
+            else
+                throw std::logic_error("Key error");
         }
 
         void preorder_tree_walk() const
@@ -167,22 +176,9 @@ namespace TreesLib
             std::cout << std::endl;
         }
 
-        T tree_search(T&& seek_key)
+        bool tree_search(T&& seek_key)
         {
-            BinaryTreeNode<T>* result = root.get();
-
-            while (result != nullptr && result->key != seek_key)
-            {
-                if (seek_key < result->key)
-                {
-                    result = result->left.get();
-                }
-                else
-                {
-                    result = result->right.get();
-                }
-            }
-            return result->key;
+            return search(std::move(seek_key)) != nullptr;
         }
 
         void remove_from_tree(T&& key)
@@ -197,6 +193,24 @@ namespace TreesLib
         }
 
     private:
+        BinaryTreeNode<T>* search(T&& seek_key) const
+        {
+            BinaryTreeNode<T>* result = root.get();
+
+            while (result != nullptr && result->key != seek_key)
+            {
+                if (seek_key < result->key)
+                {
+                    result = result->left.get();
+                }
+                else
+                {
+                    result = result->right.get();
+                }
+            }
+            return result;
+        }
+
         T tree_minimum(BinaryTreeNode<T>* subroot) const
         {
             while (subroot->left != nullptr)
@@ -221,10 +235,11 @@ namespace TreesLib
             {
                 return tree_minimum(subroot->right.get());
             }
-            std::cout << "---" << std::endl;
             auto it = subroot->parent;
+
             while (it != nullptr && subroot == it->right.get())
             {
+                std::cout << it->key << std::endl;
                 subroot = it;
                 it = it->parent;
             }
@@ -246,6 +261,8 @@ namespace TreesLib
             }
             return it->key;
         }
+
+        
     };
 }
 
