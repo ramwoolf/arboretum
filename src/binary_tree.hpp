@@ -25,10 +25,10 @@ namespace Arboretum
         BinaryTreeNode<T>* parent;
 
         BinaryTreeNode(T&& k) 
-        : key(std::move(k))
-        , left(nullptr)
-        , right(nullptr)
-        , parent(nullptr)
+        : key{std::move(k)}
+        , left{nullptr}
+        , right{nullptr}
+        , parent{nullptr}
         {}
 
         ~BinaryTreeNode()
@@ -44,7 +44,7 @@ namespace Arboretum
         TreeNodePtr<T> root;
 
     public:
-        BinaryTree() : root(nullptr) {}
+        BinaryTree() : root{nullptr} {}
         BinaryTree(std::initializer_list<T> l) : root(nullptr)
         {
             try
@@ -52,7 +52,7 @@ namespace Arboretum
                 for (auto it = l.begin(); it != l.end(); ++it)
                 {
                     auto tmp = *it;
-                    BinaryTreeNode<T>* y = nullptr;
+                    BinaryTreeNode<T>* y = nullptr; 
                     BinaryTreeNode<T>* x = root.get();
 
                     while (x != nullptr)
@@ -231,6 +231,10 @@ namespace Arboretum
 
         T tree_successor(BinaryTreeNode<T>* subroot) const
         {
+            if (tree_maximum(root.get()) == subroot->key)
+            {
+                return subroot->key;
+            }
             if (subroot->right != nullptr)
             {
                 return tree_minimum(subroot->right.get());
@@ -248,11 +252,14 @@ namespace Arboretum
 
         T tree_predecessor(BinaryTreeNode<T>* subroot) const
         {
+            if (tree_minimum(root.get()) == subroot->key)
+            {
+                return subroot->key;
+            }
             if (subroot->left != nullptr)
             {
                 return tree_maximum(subroot->left.get());
             }
-            std::cout << "---" << std::endl;
             auto it = subroot->parent;
             while (it != nullptr && subroot == it->left.get())
             {

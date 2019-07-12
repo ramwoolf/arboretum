@@ -26,8 +26,12 @@ int main(int argc, char const *argv[])
     {
         auto s6 = my_tree.successor(6);
         std::cout << "Successor for 6 is " << s6 << std::endl;
-        auto s7 = my_tree.successor(7);
-        std::cout << "Successor for 7 is " << s7 << std::endl;
+        auto s7 = my_tree.predecessor(8);
+        std::cout << "Predecessor for 8 is " << s7 << std::endl;
+        auto s8 = my_tree.predecessor(41);
+        std::cout << "Predecessor for 41 is " << s8 << std::endl;
+        auto s9 = my_tree.predecessor(6);
+        std::cout << "Predecessor for 6 is " << s9 << std::endl;
     }
     catch(const std::logic_error& e)
     {
