@@ -19,8 +19,8 @@ int main(int argc, char const *argv[])
     auto t_max = my_tree.maximum();
     auto t_min = my_tree.minimum();
     std::cout << t_max << ", " << t_min << std::endl;
-    std::cout << my_tree.tree_search(41) << std::endl;
-    std::cout << my_tree.tree_search(481) << std::endl;
+    std::cout << my_tree.is_key_exists(41) << std::endl;
+    std::cout << my_tree.is_key_exists(481) << std::endl;
     
     try
     {
@@ -32,6 +32,9 @@ int main(int argc, char const *argv[])
         std::cout << "Predecessor for 41 is " << s8 << std::endl;
         auto s9 = my_tree.predecessor(6);
         std::cout << "Predecessor for 6 is " << s9 << std::endl;
+        my_tree.remove_from_tree(18);
+        my_tree.remove_from_tree(10);
+        my_tree.preorder_tree_walk();
     }
     catch(const std::logic_error& e)
     {

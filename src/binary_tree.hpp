@@ -176,19 +176,41 @@ namespace Arboretum
             std::cout << std::endl;
         }
 
-        bool tree_search(T&& seek_key)
+        bool is_key_exists(T&& seek_key)
         {
             return search(std::move(seek_key)) != nullptr;
         }
 
         void remove_from_tree(T&& key)
         {
-            auto found_key = tree_search(std::move(key));
-            std::cout << found_key << std::endl;
-            // if (found_key == nullptr)
-            // {
-            //     std::cout << "Not found" << std::endl
-            // }
+            auto found_key = search(std::move(key));
+            if (found_key == nullptr)
+            {
+                std::cout << key << " not found" << std::endl;
+                return;
+            }
+            
+            if (found_key->left == nullptr)
+            {
+                transplant(found_key, found_key->right.get());
+            }
+            else if (found_key->right == nullptr)
+            {
+                transplant(found_key, found_key->left(get()));
+            }
+            else
+            {
+                auto right_subminimum = tree_minimum(found_key->right.get());
+                if (right_subminimum != found_key)
+                {
+                    transplant(right_subminimum, right_subminimum->right.get());
+                    right_subminimum->right.get() = found_key->right.get();
+                    right_subminimum->right->parent = right_subminimum;
+                }
+                transplant(found_key, right_subminimum);
+                right_subminimum->left.get() = found_key->left.get();
+                right_subminimum->left->parent = right_subminimum;
+            }
             return;
         }
 
@@ -269,6 +291,25 @@ namespace Arboretum
             return it->key;
         }
 
+        void transplant(BinaryTreeNode<T>* u, BinaryTreeNode<T>* v)
+        {
+            if (u->parent == nullptr)
+            {
+                root.get() = v;
+            }
+            else if (u == u->parent->left.get())
+            {
+                u->parent->left.get() = v;
+            }
+            else
+            {
+                u->parent->right.get() = v;
+            }
+            if (v != nullptr)
+            {
+                v->parent = u->parent;
+            }
+        }
         
     };
 }
