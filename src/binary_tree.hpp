@@ -119,12 +119,12 @@ namespace Arboretum
 
         T minimum() const
         {
-            return tree_minimum(root.get());
+            return tree_minimum(root.get())->key;
         }
 
         T maximum() const
         {
-            return tree_maximum(root.get());
+            return tree_maximum(root.get())->key;
         }
 
         T successor(T&& key) const
@@ -196,7 +196,7 @@ namespace Arboretum
             }
             else if (found_key->right == nullptr)
             {
-                transplant(found_key, found_key->left(get()));
+                transplant(found_key, found_key->left.get());
             }
             else
             {
@@ -204,11 +204,11 @@ namespace Arboretum
                 if (right_subminimum != found_key)
                 {
                     transplant(right_subminimum, right_subminimum->right.get());
-                    right_subminimum->right.get() = found_key->right.get();
+                    right_subminimum->right.reset(found_key->right.get());
                     right_subminimum->right->parent = right_subminimum;
                 }
                 transplant(found_key, right_subminimum);
-                right_subminimum->left.get() = found_key->left.get();
+                right_subminimum->left.reset(found_key->left.get());
                 right_subminimum->left->parent = right_subminimum;
             }
             return;
@@ -233,33 +233,33 @@ namespace Arboretum
             return result;
         }
 
-        T tree_minimum(BinaryTreeNode<T>* subroot) const
+        BinaryTreeNode<T>* tree_minimum(BinaryTreeNode<T>* subroot) const
         {
             while (subroot->left != nullptr)
             {
                 subroot = subroot->left.get();
             }
-            return subroot->key;
+            return subroot;
         }
 
-        T tree_maximum(BinaryTreeNode<T>* subroot) const
+        BinaryTreeNode<T>* tree_maximum(BinaryTreeNode<T>* subroot) const
         {
             while (subroot->right != nullptr)
             {
                 subroot = subroot->right.get();
             }
-            return subroot->key;
+            return subroot;
         }
 
         T tree_successor(BinaryTreeNode<T>* subroot) const
         {
-            if (tree_maximum(root.get()) == subroot->key)
+            if (tree_maximum(root.get())->key == subroot->key)
             {
                 return subroot->key;
             }
             if (subroot->right != nullptr)
             {
-                return tree_minimum(subroot->right.get());
+                return tree_minimum(subroot->right.get())->key;
             }
             auto it = subroot->parent;
 
@@ -274,13 +274,13 @@ namespace Arboretum
 
         T tree_predecessor(BinaryTreeNode<T>* subroot) const
         {
-            if (tree_minimum(root.get()) == subroot->key)
+            if (tree_minimum(root.get())->key == subroot->key)
             {
                 return subroot->key;
             }
             if (subroot->left != nullptr)
             {
-                return tree_maximum(subroot->left.get());
+                return tree_maximum(subroot->left.get())->key;
             }
             auto it = subroot->parent;
             while (it != nullptr && subroot == it->left.get())
@@ -295,15 +295,15 @@ namespace Arboretum
         {
             if (u->parent == nullptr)
             {
-                root.get() = v;
+                root.reset(v);
             }
             else if (u == u->parent->left.get())
             {
-                u->parent->left.get() = v;
+                u->parent->left.reset(v);
             }
             else
             {
-                u->parent->right.get() = v;
+                u->parent->right.reset(v);
             }
             if (v != nullptr)
             {
