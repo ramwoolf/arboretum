@@ -28,7 +28,6 @@ namespace Arboretum
         : key{std::move(k)}
         , left{nullptr}
         , right{nullptr}
-        , parent{nullptr}
         {}
 
         ~BinaryTreeNode()
@@ -74,7 +73,6 @@ namespace Arboretum
                     else
                     {
                         y->right = std::make_unique<BinaryTreeNode<T>>(std::move(tmp));
-                        y->right->parent = y;
                     }
                 }
             }
@@ -88,6 +86,13 @@ namespace Arboretum
 
         BinaryTree(const BinaryTree<T>& arg) = delete;
         BinaryTree<T>& operator= (const BinaryTree<T>& arg) = delete;
+
+        BinaryTree(BinaryTree&& arg) : root(arg.root){}
+        BinaryTree<T>& operator= (BinaryTree<T>&& arg)
+        {
+            root = std::move(arg.root);
+            return *this;
+        }
 
         void insert(T&& new_key)
         {
@@ -103,17 +108,14 @@ namespace Arboretum
             if (y == nullptr)
             {
                 root = std::make_unique<BinaryTreeNode<T>>(std::move(new_key));
-                root->parent = nullptr;
             }
             else if (new_key < y->key)
             {
                 y->left = std::make_unique<BinaryTreeNode<T>>(std::move(new_key));
-                y->left->parent = y;
             }
             else
             {
                 y->right = std::make_unique<BinaryTreeNode<T>>(std::move(new_key));
-                y->right->parent = y;
             }
         }
 
@@ -125,25 +127,6 @@ namespace Arboretum
         T maximum() const
         {
             return tree_maximum(root.get())->key;
-        }
-
-        T successor(T&& key) const
-        {
-            auto subroot = search(std::move(key));
-            if (subroot)
-                return tree_successor(subroot);
-            else
-                throw std::logic_error("Key error");
-            
-        }
-
-        T predecessor(T&& key) const
-        {
-            auto subroot = search(std::move(key));
-            if (subroot)
-                return tree_predecessor(subroot);
-            else
-                throw std::logic_error("Key error");
         }
 
         void preorder_tree_walk() const
@@ -249,46 +232,6 @@ namespace Arboretum
                 subroot = subroot->right.get();
             }
             return subroot;
-        }
-
-        T tree_successor(BinaryTreeNode<T>* subroot) const
-        {
-            if (tree_maximum(root.get())->key == subroot->key)
-            {
-                return subroot->key;
-            }
-            if (subroot->right != nullptr)
-            {
-                return tree_minimum(subroot->right.get())->key;
-            }
-            auto it = subroot->parent;
-
-            while (it != nullptr && subroot == it->right.get())
-            {
-                std::cout << it->key << std::endl;
-                subroot = it;
-                it = it->parent;
-            }
-            return it->key;
-        }
-
-        T tree_predecessor(BinaryTreeNode<T>* subroot) const
-        {
-            if (tree_minimum(root.get())->key == subroot->key)
-            {
-                return subroot->key;
-            }
-            if (subroot->left != nullptr)
-            {
-                return tree_maximum(subroot->left.get())->key;
-            }
-            auto it = subroot->parent;
-            while (it != nullptr && subroot == it->left.get())
-            {
-                subroot = it;
-                it = it->parent;
-            }
-            return it->key;
         }
 
         void transplant(BinaryTreeNode<T>* u, BinaryTreeNode<T>* v)
