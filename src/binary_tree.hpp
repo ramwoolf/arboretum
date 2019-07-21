@@ -30,6 +30,14 @@ namespace Arboretum
         , right{nullptr}
         {}
 
+        BinaryTreeNode(T const &key_, std::unique_ptr<BinaryTreeNode> left_, std::unique_ptr<BinaryTreeNode> right_)
+            : key(key_), left(std::move(left_)), right(std::move(right_)) 
+        {}
+
+        BinaryTreeNode(T &&key_, std::unique_ptr<BinaryTreeNode> left_, std::unique_ptr<BinaryTreeNode> right_)
+            : key(key_), left(std::move(left_)), right(std::move(right_))
+        {}
+
         ~BinaryTreeNode()
         {
             std::cout << "Dtor " << key << std::endl;
@@ -63,12 +71,10 @@ namespace Arboretum
                     if (y == nullptr)
                     {
                         root = std::make_unique<BinaryTreeNode<T>>(std::move(tmp));
-                        root->parent = nullptr;
                     }
                     else if (tmp < y->key)
                     {
                         y->left = std::make_unique<BinaryTreeNode<T>>(std::move(tmp));
-                        y->left->parent = y;
                     }
                     else
                     {
@@ -92,6 +98,11 @@ namespace Arboretum
         {
             root = std::move(arg.root);
             return *this;
+        }
+
+        bool is_empty() const
+        {
+            return root == nullptr;
         }
 
         void insert(T&& new_key)
@@ -119,14 +130,22 @@ namespace Arboretum
             }
         }
 
-        T minimum() const
+        std::unique_ptr<T> minimum() const
         {
-            return tree_minimum(root.get())->key;
+            if (is_empty())
+            {
+                return nullptr;
+            }
+            return tree_minimum(root);
         }
 
-        T maximum() const
+        std::unique_ptr<T> maximum() const
         {
-            return tree_maximum(root.get())->key;
+            if (is_empty())
+            {
+                return nullptr;
+            }
+            return tree_maximum(root);
         }
 
         void preorder_tree_walk() const
@@ -164,38 +183,38 @@ namespace Arboretum
             return search(std::move(seek_key)) != nullptr;
         }
 
-        void remove_from_tree(T&& key)
-        {
-            auto found_key = search(std::move(key));
-            if (found_key == nullptr)
-            {
-                std::cout << key << " not found" << std::endl;
-                return;
-            }
+        // void remove_from_tree(T&& key)
+        // {
+        //     auto found_key = search(std::move(key));
+        //     if (found_key == nullptr)
+        //     {
+        //         std::cout << key << " not found" << std::endl;
+        //         return;
+        //     }
             
-            if (found_key->left == nullptr)
-            {
-                transplant(found_key, found_key->right.get());
-            }
-            else if (found_key->right == nullptr)
-            {
-                transplant(found_key, found_key->left.get());
-            }
-            else
-            {
-                auto right_subminimum = tree_minimum(found_key->right.get());
-                if (right_subminimum != found_key)
-                {
-                    transplant(right_subminimum, right_subminimum->right.get());
-                    right_subminimum->right.reset(found_key->right.get());
-                    right_subminimum->right->parent = right_subminimum;
-                }
-                transplant(found_key, right_subminimum);
-                right_subminimum->left.reset(found_key->left.get());
-                right_subminimum->left->parent = right_subminimum;
-            }
-            return;
-        }
+        //     if (found_key->left == nullptr)
+        //     {
+        //         transplant(found_key, found_key->right.get());
+        //     }
+        //     else if (found_key->right == nullptr)
+        //     {
+        //         transplant(found_key, found_key->left.get());
+        //     }
+        //     else
+        //     {
+        //         auto right_subminimum = tree_minimum(found_key->right.get());
+        //         if (right_subminimum != found_key)
+        //         {
+        //             transplant(right_subminimum, right_subminimum->right.get());
+        //             right_subminimum->right.reset(found_key->right.get());
+        //             right_subminimum->right->parent = right_subminimum;
+        //         }
+        //         transplant(found_key, right_subminimum);
+        //         right_subminimum->left.reset(found_key->left.get());
+        //         right_subminimum->left->parent = right_subminimum;
+        //     }
+        //     return;
+        // }
 
     private:
         BinaryTreeNode<T>* search(T&& seek_key) const
@@ -216,43 +235,43 @@ namespace Arboretum
             return result;
         }
 
-        BinaryTreeNode<T>* tree_minimum(BinaryTreeNode<T>* subroot) const
+        std::unique_ptr<T> tree_minimum(TreeNodePtr<T> const &subroot) const
         {
-            while (subroot->left != nullptr)
+            if (subroot->left == nullptr)
             {
-                subroot = subroot->left.get();
+                return std::make_unique<T>(subroot->key);
             }
-            return subroot;
+            return tree_minimum(subroot->left);
         }
 
-        BinaryTreeNode<T>* tree_maximum(BinaryTreeNode<T>* subroot) const
+        std::unique_ptr<T> tree_maximum(TreeNodePtr<T> const &subroot) const
         {
-            while (subroot->right != nullptr)
+            if (subroot->right == nullptr)
             {
-                subroot = subroot->right.get();
+                return std::make_unique<T>(subroot->key);
             }
-            return subroot;
+            return tree_minimum(subroot->right);
         }
 
-        void transplant(BinaryTreeNode<T>* u, BinaryTreeNode<T>* v)
-        {
-            if (u->parent == nullptr)
-            {
-                root.reset(v);
-            }
-            else if (u == u->parent->left.get())
-            {
-                u->parent->left.reset(v);
-            }
-            else
-            {
-                u->parent->right.reset(v);
-            }
-            if (v != nullptr)
-            {
-                v->parent = u->parent;
-            }
-        }
+        // void transplant(BinaryTreeNode<T>* u, BinaryTreeNode<T>* v)
+        // {
+        //     if (u->parent == nullptr)
+        //     {
+        //         root.reset(v);
+        //     }
+        //     else if (u == u->parent->left.get())
+        //     {
+        //         u->parent->left.reset(v);
+        //     }
+        //     else
+        //     {
+        //         u->parent->right.reset(v);
+        //     }
+        //     if (v != nullptr)
+        //     {
+        //         v->parent = u->parent;
+        //     }
+        // }
         
     };
 }
