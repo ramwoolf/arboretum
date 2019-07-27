@@ -18,9 +18,11 @@ int main(int argc, char const *argv[])
     my_tree.preorder_tree_walk();
     auto t_max = my_tree.maximum();
     auto t_min = my_tree.minimum();
-    std::cout << *t_max << ", " << *t_min << std::endl;
-    std::cout << my_tree.is_key_exists(41) << std::endl;
-    std::cout << my_tree.is_key_exists(481) << std::endl;
+    std::cout << "Max " << *t_max << ", min" << *t_min << std::endl;
+    std::cout << my_tree.is_key_exists(34) << std::endl;
+    std::cout << "Remove 34" << std::endl;
+    my_tree.remove(34);
+    std::cout << my_tree.is_key_exists(34) << std::endl;
     
     try
     {

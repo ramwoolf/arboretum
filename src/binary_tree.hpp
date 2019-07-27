@@ -16,6 +16,9 @@ namespace Arboretum
     using TreeNodePtr = std::unique_ptr<BinaryTreeNode<T>>;
 
     template <typename T>
+    using TreeNodeRef = std::unique_ptr<BinaryTreeNode<T>>&;
+
+    template <typename T>
     struct BinaryTreeNode
     {
         T key;
@@ -59,27 +62,7 @@ namespace Arboretum
                 for (auto it = l.begin(); it != l.end(); ++it)
                 {
                     auto tmp = *it;
-                    BinaryTreeNode<T>* y = nullptr; 
-                    BinaryTreeNode<T>* x = root.get();
-
-                    while (x != nullptr)
-                    {
-                        y = x;
-                        x = (tmp < x->key) ? x->left.get() : x->right.get();
-                    }
-
-                    if (y == nullptr)
-                    {
-                        root = std::make_unique<BinaryTreeNode<T>>(std::move(tmp));
-                    }
-                    else if (tmp < y->key)
-                    {
-                        y->left = std::make_unique<BinaryTreeNode<T>>(std::move(tmp));
-                    }
-                    else
-                    {
-                        y->right = std::make_unique<BinaryTreeNode<T>>(std::move(tmp));
-                    }
+                    insert(std::move(tmp), root);
                 }
             }
             catch (const std::bad_alloc& e)
@@ -107,27 +90,12 @@ namespace Arboretum
 
         void insert(T&& new_key)
         {
-            BinaryTreeNode<T>* y = nullptr;
-            BinaryTreeNode<T>* x = root.get();
+            insert(std::move(new_key), root);
+        }
 
-            while (x != nullptr)
-            {
-                y = x;
-                x = (new_key < x->key) ? x->left.get() : x->right.get();
-            }
-
-            if (y == nullptr)
-            {
-                root = std::make_unique<BinaryTreeNode<T>>(std::move(new_key));
-            }
-            else if (new_key < y->key)
-            {
-                y->left = std::make_unique<BinaryTreeNode<T>>(std::move(new_key));
-            }
-            else
-            {
-                y->right = std::make_unique<BinaryTreeNode<T>>(std::move(new_key));
-            }
+        void remove(T const &key_to_remove)
+        {
+            remove(key_to_remove, root);
         }
 
         std::unique_ptr<T> minimum() const
@@ -178,61 +146,71 @@ namespace Arboretum
             std::cout << std::endl;
         }
 
-        bool is_key_exists(T&& seek_key)
+        bool is_key_exists(T const &seek_key)
         {
-            return search(std::move(seek_key)) != nullptr;
-        }
-
-        // void remove_from_tree(T&& key)
-        // {
-        //     auto found_key = search(std::move(key));
-        //     if (found_key == nullptr)
-        //     {
-        //         std::cout << key << " not found" << std::endl;
-        //         return;
-        //     }
-            
-        //     if (found_key->left == nullptr)
-        //     {
-        //         transplant(found_key, found_key->right.get());
-        //     }
-        //     else if (found_key->right == nullptr)
-        //     {
-        //         transplant(found_key, found_key->left.get());
-        //     }
-        //     else
-        //     {
-        //         auto right_subminimum = tree_minimum(found_key->right.get());
-        //         if (right_subminimum != found_key)
-        //         {
-        //             transplant(right_subminimum, right_subminimum->right.get());
-        //             right_subminimum->right.reset(found_key->right.get());
-        //             right_subminimum->right->parent = right_subminimum;
-        //         }
-        //         transplant(found_key, right_subminimum);
-        //         right_subminimum->left.reset(found_key->left.get());
-        //         right_subminimum->left->parent = right_subminimum;
-        //     }
-        //     return;
-        // }
+            return is_key_exists(seek_key, root);
+        }        
 
     private:
-        BinaryTreeNode<T>* search(T&& seek_key) const
+        void insert(T&& new_key, TreeNodeRef<T> node)
         {
-            BinaryTreeNode<T>* result = root.get();
-
-            while (result != nullptr && result->key != seek_key)
+            if (node == nullptr)
             {
-                if (seek_key < result->key)
-                {
-                    result = result->left.get();
-                }
-                else
-                {
-                    result = result->right.get();
-                }
+                node = std::make_unique<BinaryTreeNode<T>>(std::move(new_key), nullptr, nullptr);
             }
-            return result;
+            else if (new_key < node->key)
+            {
+                insert(std::move(new_key), node->left);
+            }
+            else if (new_key > node->key)
+            {
+                insert(std::move(new_key), node->right);
+            }
+        }
+
+        void remove(T const &key_to_remove, TreeNodeRef<T> node)
+        {
+            if (is_empty())
+            {
+                return;
+            }
+            if (key_to_remove < node->key)
+            {
+                remove(key_to_remove, node->left);
+            }
+            else if (key_to_remove > node->key)
+            {
+                remove(key_to_remove, node->right);
+            }
+            else if (node->left != nullptr && node->right != nullptr)
+            {
+                node->key = *tree_minimum(node->right);
+                remove(node->key, node->right);
+            }
+            else
+            {
+                node = (node->left != nullptr) ? std::move(node->left) : std::move(node->right);
+            }
+        }
+
+        bool is_key_exists(T const &seek_key, TreeNodeRef<T> node)
+        {
+            if (node == nullptr)
+            {
+                return false;
+            }
+            else if (seek_key < node->key)
+            {
+                return is_key_exists(seek_key, node->left);
+            }
+            else if (seek_key > node->key)
+            {
+                return is_key_exists(seek_key, node->right);
+            }
+            else
+            {
+                return true;
+            }
         }
 
         std::unique_ptr<T> tree_minimum(TreeNodePtr<T> const &subroot) const
@@ -251,28 +229,7 @@ namespace Arboretum
                 return std::make_unique<T>(subroot->key);
             }
             return tree_minimum(subroot->right);
-        }
-
-        // void transplant(BinaryTreeNode<T>* u, BinaryTreeNode<T>* v)
-        // {
-        //     if (u->parent == nullptr)
-        //     {
-        //         root.reset(v);
-        //     }
-        //     else if (u == u->parent->left.get())
-        //     {
-        //         u->parent->left.reset(v);
-        //     }
-        //     else
-        //     {
-        //         u->parent->right.reset(v);
-        //     }
-        //     if (v != nullptr)
-        //     {
-        //         v->parent = u->parent;
-        //     }
-        // }
-        
+        }        
     };
 }
 
